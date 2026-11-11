@@ -321,6 +321,12 @@ moon.shadow.mapSize.set(2048, 2048);
 moon.shadow.camera.left = -70; moon.shadow.camera.right = 70; moon.shadow.camera.top = 70; moon.shadow.camera.bottom = -70;
 moon.shadow.camera.near = 1; moon.shadow.camera.far = 300; moon.shadow.bias = -0.0006; moon.shadow.normalBias = 0.04;
 scene.add(moon); scene.add(moon.target);
+const IMPACT_LIGHTS = [];
+for (let i = 0; i < 5; i++) {
+  const l = new THREE.PointLight(0xffffff, 0, 3);
+  scene.add(l);
+  IMPACT_LIGHTS.push({ light: l, active: false });
+}
 const lantern = new THREE.PointLight(0xffb870, 30, 40, 1.2);
 lantern.castShadow = true;
 lantern.shadow.mapSize.set(512, 512); lantern.shadow.bias = -0.004; lantern.shadow.camera.far = 40;
@@ -451,22 +457,33 @@ function updateProjectiles(dt) {
   }
 }
 
+
+const impactGeo = new THREE.BoxGeometry(0.05, 0.05, 0.05);
+const impactMat = new THREE.MeshBasicMaterial({ color: 0xE9B5FF });
 function spawnImpactEffect(pos, color) {
-  const p = new THREE.PointLight(color, 5, 2); p.position.copy(pos); scene.add(p); setTimeout(() => scene.remove(p), 50);
+  const freeLight = IMPACT_LIGHTS.find(l => !l.active);
+  if (freeLight) {
+    freeLight.active = true;
+    freeLight.light.color.setHex(color);
+    freeLight.light.position.copy(pos);
+    freeLight.light.intensity = 15; // brighter flash
+    setTimeout(() => { freeLight.active = false; freeLight.light.intensity = 0; }, 60);
+  }
   for (let i = 0; i < 5; i++) {
-    const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.05), new THREE.MeshBasicMaterial({ color: 0xE9B5FF }));
+    const mesh = new THREE.Mesh(impactGeo, impactMat);
     mesh.position.copy(pos); scene.add(mesh);
     const vel = new THREE.Vector3((Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4, (Math.random() - 0.5) * 4);
     const start = performance.now();
     const anim = () => {
       const t = (performance.now() - start) / 300;
-      if (t >= 1) { scene.remove(mesh); mesh.geometry.dispose(); mesh.material.dispose(); return; }
+      if (t >= 1) { scene.remove(mesh); return; }
       mesh.position.addScaledVector(vel, 0.016); mesh.scale.setScalar(1 - t);
       requestAnimationFrame(anim);
     };
     requestAnimationFrame(anim);
   }
 }
+
 
 const REALMS = {
   drift: {
