@@ -1956,6 +1956,7 @@ function applyRealmEnvironment(realmId) {
   ambientLight.intensity = r.ambientIntensity;
   dirLight.color.setHex(r.dirColor);
   dirLight.intensity = r.dirIntensity;
+  if (typeof updateSkybox !== 'undefined') updateSkybox(realmId);
 }
 
 function switchRealm(realmId, targetPos) {
@@ -2368,15 +2369,27 @@ function updateCamera(dt) {
   }
 }
 
-{
-  const c = document.createElement('canvas'); c.width = 4; c.height = 256;
-  const g = c.getContext('2d');
-  const grad = g.createLinearGradient(0, 0, 0, 256);
-  grad.addColorStop(0, '#080e14'); grad.addColorStop(0.4, '#14202a'); grad.addColorStop(0.7, '#1e2c38'); grad.addColorStop(1, '#0a0e12');
-  g.fillStyle = grad; g.fillRect(0, 0, 4, 256);
-  const tex = new THREE.CanvasTexture(c);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  scene.add(new THREE.Mesh(new THREE.SphereGeometry(500, 24, 16), new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide, fog: false, depthWrite: false })));
+
+const skyboxCanvas = document.createElement('canvas'); 
+skyboxCanvas.width = 4; skyboxCanvas.height = 256;
+const skyboxCtx = skyboxCanvas.getContext('2d');
+const skyboxTex = new THREE.CanvasTexture(skyboxCanvas);
+skyboxTex.colorSpace = THREE.SRGBColorSpace;
+const skyboxMat = new THREE.MeshBasicMaterial({ map: skyboxTex, side: THREE.BackSide, fog: false, depthWrite: false });
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(500, 24, 16), skyboxMat));
+
+function updateSkybox(realmId) {
+  const isDrift = realmId === 'drift';
+  const grad = skyboxCtx.createLinearGradient(0, 0, 0, 256);
+  if (isDrift) {
+    grad.addColorStop(0, '#5599cc'); grad.addColorStop(0.4, '#77aadd'); grad.addColorStop(0.7, '#88bbee'); grad.addColorStop(1, '#aaccff');
+  } else {
+    grad.addColorStop(0, '#080e14'); grad.addColorStop(0.4, '#14202a'); grad.addColorStop(0.7, '#1e2c38'); grad.addColorStop(1, '#0a0e12');
+  }
+  skyboxCtx.fillStyle = grad; skyboxCtx.fillRect(0, 0, 4, 256);
+  skyboxTex.needsUpdate = true;
+}
+
 
   function buildSilhouetteGeo(w, d, h, seed) {
     const rand = mulberry32(seed);
