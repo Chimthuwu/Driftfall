@@ -1,0 +1,30 @@
+# PLATFORMR2 (The Drift & The Hollow)
+## Stage 1: Architecture and Foundation
+
+### Codebase & Systems Mapping
+- **World Generation:** Driven by `generateWorld(seed)` using `REGION_DEFS` and `POI_DEFS`. Generates mathematical locations for islands (x,y,z,w,d,h) and connects them with bridges. Meshes are built separately via `buildIslandMeshes`.
+- **Gameplay Systems:** Voxel-based movement with `onGround` and `coyote` time. Resource harvesting and simple gridless building (platforms, ramps, walls) via `buildings` array. Combat with hitscan `updateProjectiles` and a generic enemy pool.
+- **Save/Load:** `localStorage` JSON serialization. Previously saved global `gameState.world` and arrays of state. 
+
+### Realm Architecture (Implemented)
+- **`REALMS` Object:** Contains configuration for each realm (`drift`, `hollow`), including fog/sky colors, lighting intensities, regions, and POIs.
+- **State Segregation:** `gameState.realmsData` caches the state of inactive realms (buildings, harvested nodes, opened caches, world layout, discovered POIs).
+- **`switchRealm(realmId)`:** 
+  1. Serializes current realm state into `realmsData`.
+  2. Updates environment (lighting/fog).
+  3. Clears physical scene meshes (`buildingGroup`, `islandGroup`, etc.).
+  4. Restores target realm from `realmsData` (or generates fresh).
+  5. Teleports player to the target portal or realm origin.
+- **Save Integration:** `activeRealmData` is packed into the save file alongside `realmsData` to ensure seamless resumption in the current realm.
+- **Portals:** Special POI types (`drift_arch` and `hollow_arch`) that act as reciprocal trigger volumes, executing `switchRealm` when the player enters their radius.
+
+### Lessons & Risks (from SkyJump3D and The Hollow)
+- **State Leakage:** The biggest risk when switching realms is leaving active entities, building colliders, or UI elements behind. **Mitigation:** We rigorously clear `scene` groups, `gameState.buildings`, `gameState.entities`, `gameState.rewardCaches`, and rebuild them from `realmsData`.
+- **Performance:** Keeping all realms in memory as THREE.js meshes would crash the browser. **Mitigation:** `switchRealm` destroys the THREE.js meshes for the old realm and only retains the lightweight JS object representations, rebuilding meshes only on entry.
+- **Fall Loops:** Vertical exploration requires a kill floor. If a player falls in *The Drift*, they shouldn't just die—perhaps they fall into *The Hollow*. For now, the standard `y < -50` kill plane applies, but cross-realm falling is a future architectural consideration.
+- **Light & Environment Leaks:** THREE.js materials (like `FogExp2`) need explicit color/density updates when switching dimensions. **Mitigation:** `applyRealmEnvironment()` mutates the global lights and fog dynamically.
+
+### Next Steps (Stage 2)
+- Implement biome diversity and vertical structures in The Drift.
+- Flesh out The Hollow as the dark underworld.
+- Connect vertical transitions.
