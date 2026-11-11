@@ -24,7 +24,9 @@
 - **Fall Loops:** Vertical exploration requires a kill floor. If a player falls in *The Drift*, they shouldn't just die—perhaps they fall into *The Hollow*. For now, the standard `y < -50` kill plane applies, but cross-realm falling is a future architectural consideration.
 - **Light & Environment Leaks:** THREE.js materials (like `FogExp2`) need explicit color/density updates when switching dimensions. **Mitigation:** `applyRealmEnvironment()` mutates the global lights and fog dynamically.
 
-### Next Steps (Stage 2)
-- Implement biome diversity and vertical structures in The Drift.
+### Stage 2 & 3: Verticality (Implemented)
+- **Ascension:** Added `drift_peak` POI at `y: 160` (The Drift Peak). It is a large, high-altitude tower requiring player building to scale, rewarding them with a citadel cache. This fulfills the upward exploration route.
+- **Descent (The Fall):** Falling off the edge in The Drift (`y < -75`) no longer damages or resets you; instead it automatically switches the realm to `hollow` and drops you into the dark sky, maintaining your X/Z coordinates. This acts as the dramatic downward route connecting the realms.
+
+### Next Steps (Stage 4)
 - Flesh out The Hollow as the dark underworld.
-- Connect vertical transitions.

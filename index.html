@@ -486,9 +486,12 @@ const REALMS = {
       { name: 'THE SUNLIT STRUCTURES', x: 250, y: -20, z: 320, style: 'sunken', radius: 80, count: 7, sizeMin: 10, sizeMax: 18, ySpread: 12 },
       { name: 'THE FLOATING HEIGHTS', x: 100, y: 55, z: 300, style: 'heights', radius: 70, count: 6, sizeMin: 4, sizeMax: 8, ySpread: 20 },
       { name: 'THE DRIFT OUTER REACHES', x: 460, y: 30, z: 100, style: 'outer', radius: 80, count: 6, sizeMin: 5, sizeMax: 11, ySpread: 15 },
+      { name: 'THE DEEP DESCENT', x: 280, y: -45, z: 120, style: 'sunken', radius: 40, count: 5, sizeMin: 8, sizeMax: 15, ySpread: 10 },
+      { name: 'THE ASCENSION TOWERS', x: 200, y: 110, z: 400, style: 'heights', radius: 50, count: 8, sizeMin: 6, sizeMax: 12, ySpread: 25 }
     ],
     pois: [
-      { id: 'drift_arch', name: 'THE DIMENSIONAL ARCH', x: 280, y: 35, z: 120, radius: 18 }
+      { id: 'drift_arch', name: 'THE DIMENSIONAL ARCH', x: 280, y: -60, z: 120, radius: 18 },
+      { id: 'drift_peak', name: 'THE DRIFT PEAK', x: 200, y: 160, z: 400, radius: 14 }
     ]
   },
   hollow: {
@@ -1039,6 +1042,23 @@ function buildPOI(poi, island) {
 
   
   
+  
+  if (poi.id === 'drift_peak') {
+    // A high altitude challenge area
+    const tw = 8, td = 8, th = 30;
+    addStatic(cx, cy, cz, tw, th, td, MAT.ancient);
+    for (let i = 0; i < 10; i++) {
+      const angle = (i / 10) * Math.PI * 2 * 2.5;
+      const radius = 6 + i * 0.4;
+      const py = cy + 2 + i * 3;
+      addStatic(cx + Math.cos(angle) * radius, py - 0.3, cz + Math.sin(angle) * radius, 3, 0.4, 3, MAT.stone, { walkable: true });
+    }
+    // Reward at top
+    addStatic(cx, cy + th, cz, 4, 1, 4, MAT.metal);
+    addRewardCache(cx, cy + th + 1, cz, 'citadel');
+    return;
+  }
+
   if (poi.id === 'hollow_arch') {
     addStatic(cx - 3, cy, cz, 1, 8, 1, MAT.ancient);
     addStatic(cx + 3, cy, cz, 1, 8, 1, MAT.ancient);
@@ -1768,7 +1788,20 @@ function updatePlayer(dt) {
   if (p.onGround) p.coyote = 0.12; else p.coyote = Math.max(0, p.coyote - dt);
   if (p.jumpBuffer > 0) p.jumpBuffer -= dt;
   if (p.invuln > 0) p.invuln -= dt;
-  if (p.pos.y < VOID_Y) { p.pos.y = 65; p.vel.y = -12; p.vel.x = 0; p.vel.z = 0; gameState.camShake = 0.8; damagePlayer(15); showMessage('THE VOID SPITS YOU OUT', 2); }
+  
+  const currentVoidY = (gameState.activeRealmId === 'drift') ? -75 : -80;
+  if (p.pos.y < currentVoidY) {
+    if (gameState.activeRealmId === 'drift') {
+      // Fall into The Hollow
+      showMessage('FALLING INTO THE HOLLOW...', 3);
+      // Determine where they fall in the hollow
+      // We will place them high up above the hollow_arch or above 0,0,0 so they keep falling
+      setTimeout(() => { switchRealm('hollow', new THREE.Vector3(p.pos.x, 100, p.pos.z)); }, 10);
+    } else {
+      p.pos.y = 65; p.vel.y = -12; p.vel.x = 0; p.vel.z = 0; gameState.camShake = 0.8; damagePlayer(15); showMessage('THE VOID SPITS YOU OUT', 2);
+    }
+  }
+
 }
 
 function updateEntities(dt) {
