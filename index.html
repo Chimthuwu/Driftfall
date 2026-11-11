@@ -802,7 +802,8 @@ function buildIslandMeshes() {
   }
 
   // Build POI structures
-  for (const poi of POI_DEFS) {
+    const activeRealm = REALMS[gameState.activeRealmId];
+  for (const poi of activeRealm.pois) {
     const poiIsland = gameState.world.islands.find(i => i.poiId === poi.id);
     if (poiIsland) buildPOI(poi, poiIsland);
   }
@@ -1533,7 +1534,8 @@ function spawnEntities() {
     gameState.entities.push({ pos: new THREE.Vector3(x, island.y, z), spawnPos: new THREE.Vector3(x, island.y, z), dir: rand() * Math.PI * 2, phase: rand() * 6.28, whisperTimer: 3 + rand() * 4, homeY: island.y, mesh, health: 100, maxHealth: 100, lastAttack: 0 });
   }
   // POI enemies
-  for (const poi of POI_DEFS) {
+    const activeRealm = REALMS[gameState.activeRealmId];
+  for (const poi of activeRealm.pois) {
     for (let i = 0; i < 2; i++) {
       const x = poi.x + (rand() - 0.5) * 10;
       const z = poi.z + (rand() - 0.5) * 10;
@@ -2483,7 +2485,7 @@ function checkPortalInteraction() {
     const dx = p.x - gameState.player.pos.x;
     const dy = p.y - gameState.player.pos.y;
     const dz = p.z - gameState.player.pos.z;
-    if (dx*dx + dz*dz < p.radius*p.radius && dy > -1 && dy < 6) {
+    if (dx*dx + dz*dz < p.radius*p.radius && dy > -6 && dy < 6) {
        // Travel to the realm
        showMessage(`ENTERING ${REALMS[p.targetRealm].name}...`, 3);
        // We need to set a targetPos or use a default one for the target realm.
@@ -2515,16 +2517,19 @@ function update(dt) {
       if (b.mesh && b.mesh.userData.fire) { b.mesh.userData.fire.scale.y = 1 + Math.sin(gameState.time * 15) * 0.15; b.mesh.userData.fire.rotation.y += dt * 3; }
       if (b.mesh && b.mesh.userData.fireLight) b.mesh.userData.fireLight.intensity = 8 + Math.sin(gameState.time * 12) * 2;
     }
-    for (const region of REGION_DEFS) {
+
+    const activeRealm = REALMS[gameState.activeRealmId];
+    for (const region of activeRealm.regions) {
       if (gameState.discovered.has(region.name)) continue;
       const dx = gameState.player.pos.x - region.x, dy = gameState.player.pos.y - region.y, dz = gameState.player.pos.z - region.z;
       if (dx * dx + dy * dy + dz * dz < (region.radius * 0.6) ** 2) { gameState.discovered.add(region.name); showMessage('DISCOVERED: ' + region.name, 3); }
     }
-    for (const poi of POI_DEFS) {
+    for (const poi of activeRealm.pois) {
       if (gameState.discovered.has(poi.name)) continue;
       const dx = gameState.player.pos.x - poi.x, dy = gameState.player.pos.y - poi.y, dz = gameState.player.pos.z - poi.z;
       if (dx * dx + dy * dy + dz * dz < (poi.radius * 0.7) ** 2) { gameState.discovered.add(poi.name); showMessage('DISCOVERED: ' + poi.name, 3.5); }
     }
+
     gameState.saveTimer += dt;
     if (gameState.saveTimer > 12) { gameState.saveTimer = 0; saveGame(); }
     if (resourceEls.sanity) {

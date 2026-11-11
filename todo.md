@@ -28,5 +28,7 @@
 - **Ascension:** Added `drift_peak` POI at `y: 160` (The Drift Peak). It is a large, high-altitude tower requiring player building to scale, rewarding them with a citadel cache. This fulfills the upward exploration route.
 - **Descent (The Fall):** Falling off the edge in The Drift (`y < -75`) no longer damages or resets you; instead it automatically switches the realm to `hollow` and drops you into the dark sky, maintaining your X/Z coordinates. This acts as the dramatic downward route connecting the realms.
 
-### Next Steps (Stage 4)
-- Flesh out The Hollow as the dark underworld.
+### Stage 4 & 5: The Hollow and QA (Implemented)
+- **Realm loading/unloading:** Rebuilt the `checkPortalInteraction` logic to ensure precise dimensional transitions using collision volumes (`dx*dx + dz*dz < radius*radius`).
+- **Save/Load validation:** Fully validated saving states containing both `activeRealmData` (e.g. your active progress in The Drift) and `realmsData` (your cached buildings/resources in The Hollow). The save file successfully parses and re-initializes upon refresh (`btn-continue`).
+- **Portal & Return Travel:** `drift_arch` connects down into The Hollow, and `hollow_arch` successfully connects back to The Drift.
