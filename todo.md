@@ -32,3 +32,9 @@
 - **Realm loading/unloading:** Rebuilt the `checkPortalInteraction` logic to ensure precise dimensional transitions using collision volumes (`dx*dx + dz*dz < radius*radius`).
 - **Save/Load validation:** Fully validated saving states containing both `activeRealmData` (e.g. your active progress in The Drift) and `realmsData` (your cached buildings/resources in The Hollow). The save file successfully parses and re-initializes upon refresh (`btn-continue`).
 - **Portal & Return Travel:** `drift_arch` connects down into The Hollow, and `hollow_arch` successfully connects back to The Drift.
+
+## 2026-11-12: Rename + ship
+- CRITICAL FIX: commit 166085e (skybox swap) left an orphaned silhouette block with a stray `}` after `updateSkybox()` — module-level SyntaxError, game never started (black screen, HUD static HTML only). Fixed by removing the stray brace (silhouettes now build once at top level into `scene`).
+- Renamed to DRIFTFALL (The Hollow is now just one realm). og:/twitter: meta + thumb.png (1200x630 in-game capture, HUD hidden) + favicon.png.
+- Live: https://driftfall-237.pages.dev · Repo: github.com/Chimthuwu/Driftfall · Cloudflare Pages project `driftfall` (manual `wrangler pages deploy . --project-name=driftfall`).
+- og:image hardcoded to driftfall-237.pages.dev — update if a custom domain is added.
